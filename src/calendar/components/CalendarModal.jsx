@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Modal from 'react-modal'; ///lib/components/modal
 import Swal from 'sweetalert2/dist/sweetalert2.js'
 import 'sweetalert2/dist/sweetalert2.min.css'
 //import 'sweetalert2/src/sweetalert2.scss'
-
 import { addHours, differenceInSeconds } from 'date-fns'
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale/es';
+import { useCalendarStore, useUiStore } from '../../hooks';
 
 
 const customStyles = {
@@ -25,16 +25,21 @@ registerLocale('es', es);
 
 Modal.setAppElement('#root');
 
+const initialEvent = {
+    title: "",
+    notes: "",
+    start: new Date(),
+    end: addHours(new Date(), 1),
+}
+
 export const CalendarModal = () => {
 
-    const [formValues, setFormValues] = useState({
-        title: 'fernando',
-        notes: 'herrera',
-        start: new Date(),
-        end: addHours(new Date(), 2)
-    });
+    const { activeEvent, startSavingEvent, setActiveEvent } = useCalendarStore();
 
-    const [isOpen, setIsOpen] = useState(true);
+    const [formValues, setFormValues] = useState(initialEvent);
+
+    const { isDateModalOpen, closeDateModal } = useUiStore();
+
     const [formSubmitted, setFormSubmitted] = useState(false);
 
     const titleClass = useMemo(() => {
@@ -46,6 +51,10 @@ export const CalendarModal = () => {
             : 'is-invalid';
 
     }, [formValues.title, formSubmitted])
+
+    useEffect( () => {
+        if(activeEvent !== null) setFormValues({...activeEvent})
+    }, [activeEvent]);
 
     const onInputChange = ({ target }) => {
         setFormValues({
@@ -62,10 +71,11 @@ export const CalendarModal = () => {
     }
 
     const onCloseModal = () => {
-        setIsOpen(false);
+        closeDateModal();
+        setActiveEvent(null);
     }
 
-    const onSubmit = (event) => {
+    const onSubmit = async (event) => {
 
         event.preventDefault();
         setFormSubmitted(true);
@@ -79,14 +89,16 @@ export const CalendarModal = () => {
         console.log(formValues);
 
         //TODO  
-        //remover errores
-        //cerrar el modal
+        await startSavingEvent(formValues);
+        closeDateModal();
+        setFormSubmitted(false);
+        setActiveEvent(null);
     }
 
     return (
 
         <Modal
-            isOpen={isOpen}
+            isOpen={isDateModalOpen}
             onRequestClose={onCloseModal}
             style={customStyles}
             className="modal"
