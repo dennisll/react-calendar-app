@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { calendarApi } from '../api';
-import { clearErrorMessage, onChecking, onLogin, onLogout } from '../store';
+import { clearErrorMessage, onChecking, onLogin, onLogout, onLogoutCalendar } from '../store';
 
 
 
@@ -12,13 +12,14 @@ export const useAuthStore = () => {
     const startLogin = async({ email, password }) => {
 
         dispatch( onChecking() );
+        
         try {
 
             const { data } = await calendarApi.post('/auth',{ email, password });
 
             localStorage.setItem('token', data.token );
             localStorage.setItem('token-init-date', new Date().getTime() );
-            dispatch( onLogin({ name: data.name, uid: data.uid }) );
+            dispatch( onLogin({ name: data.name, _id: data.uid }) );
             
         } catch (error) {
 
@@ -37,7 +38,7 @@ export const useAuthStore = () => {
             const { data } = await calendarApi.post('/auth/new',{ email, password, name });
             localStorage.setItem('token', data.token );
             localStorage.setItem('token-init-date', new Date().getTime() );
-            dispatch( onLogin({ name: data.name, uid: data.uid }) );
+            dispatch( onLogin({ name: data.name, _id: data.uid }) );
             
         } catch (error) {
 
@@ -59,7 +60,7 @@ export const useAuthStore = () => {
             const { data } = await calendarApi.get('auth/renew');
             localStorage.setItem('token', data.token );
             localStorage.setItem('token-init-date', new Date().getTime() );
-            dispatch( onLogin({ name: data.name, uid: data.uid }) );
+            dispatch( onLogin({ name: data.name, _id: data.uid }) );
         } catch (error) {
 
             localStorage.clear();
@@ -68,10 +69,10 @@ export const useAuthStore = () => {
     }
 
     const startLogout = () => {
-        
         localStorage.clear();
-        dispatch(onLogout());
-    }
+        dispatch( onLogoutCalendar() );
+        dispatch( onLogout() );
+      }
 
 
     return {

@@ -23,7 +23,9 @@ const customStyles = {
 
 registerLocale('es', es);
 
-Modal.setAppElement('#root');
+if ( getEnvVariables().VITE_MODE !== 'test'  ) {
+    Modal.setAppElement('#root');
+}
 
 const initialEvent = {
     title: "",
@@ -52,9 +54,12 @@ export const CalendarModal = () => {
 
     }, [formValues.title, formSubmitted])
 
-    useEffect( () => {
-        if(activeEvent !== null) setFormValues({...activeEvent})
-    }, [activeEvent]);
+    useEffect( () => { 
+
+        if(activeEvent !== null) 
+            setFormValues({...activeEvent});
+
+    }, [activeEvent]); 
 
     const onInputChange = ({ target }) => {
         setFormValues({
@@ -64,6 +69,7 @@ export const CalendarModal = () => {
     }
 
     const onDateChange = (event, changing) => {
+        
         setFormValues({
             ...formValues,
             [changing]: event
@@ -79,17 +85,20 @@ export const CalendarModal = () => {
 
         event.preventDefault();
         setFormSubmitted(true);
+
         const difference = differenceInSeconds(formValues.end, formValues.start);
 
         if (isNaN(difference) || difference <= 0) {
             Swal.fire('Fechas incorrectas', 'Revisar las fechas ingresadas', 'error');
             return;
         }
+
         if (formValues.title.length <= 0) return;
-        console.log(formValues);
 
         //TODO  
+
         await startSavingEvent(formValues);
+
         closeDateModal();
         setFormSubmitted(false);
         setActiveEvent(null);
